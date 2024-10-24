@@ -2,52 +2,68 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload and View Charts</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
-</head>
-<body>
-    <h1>Upload a File</h1>
-    <form id="uploadForm" enctype="multipart/form-data">
-        <input type="file" name="file" id="file">
-        <button type="submit">Upload</button>
-    </form>
-    <div id="charts"></div>
-
+    <title>Visualizer</title>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
     <script>
-        const socket = io();
+        document.addEventListener("DOMContentLoaded", function() {
+            const socket = io();
 
-        socket.on('update_window', function (data) {
-            console.log(data.message);
-            fetch('/list_charts')
+            socket.on('update', function(data) {
+                if (data.status === 'new_data') {
+                    loadCharts();
+                }
+            });
+
+            function loadCharts() {
+                fetch('/list_charts')
+                    .then(response => response.json())
+                    .then(data => {
+                        const chartContainer = document.getElementById('chartContainer');
+                        chartContainer.innerHTML = '';
+                        data.charts.forEach(chart => {
+                            const img = document.createElement('img');
+                            img.src = `/chart/${chart}`;
+                            img.style.width = '100%';
+                            img.style.marginBottom = '20px';
+                            chartContainer.appendChild(img);
+                        });
+                    })
+                    .catch(error => console.error('Error loading charts:', error));
+            }
+
+            document.getElementById('uploadForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+                const formData = new FormData(this);
+
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
                 .then(response => response.json())
                 .then(data => {
-                    const chartsDiv = document.getElementById('charts');
-                    chartsDiv.innerHTML = '';
-                    data.charts.forEach(chart => {
-                        const img = document.createElement('img');
-                        img.src = '/chart/' + chart;
-                        img.style.width = '100%';
-                        chartsDiv.appendChild(img);
-                    });
+                    if (data.message) {
+                        alert(data.message);
+                    } else if (data.error) {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Upload error:', error);
                 });
-        });
-
-        document.getElementById('uploadForm').onsubmit = function (e) {
-            e.preventDefault();
-            const formData = new FormData();
-            formData.append('file', document.getElementById('file').files[0]);
-
-            fetch('/upload', {
-                method: 'POST',
-                body: formData
-            }).then(response => response.json())
-            .then(data => {
-                console.log(data.message);
-            }).catch(error => {
-                console.error('Error:', error);
             });
-        };
+
+            loadCharts(); // Load charts on page load
+        });
     </script>
+</head>
+<body>
+    <h1>Upload and Visualize</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" name="file" required>
+        <button type="submit">Upload</button>
+    </form>
+    <div id="chartContainer"></div>
 </body>
 </html>

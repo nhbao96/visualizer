@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload and View Charts</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+</head>
+<body>
+    <h1>Upload a File</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" name="file" id="file">
+        <button type="submit">Upload</button>
+    </form>
+    <div id="charts"></div>
+
+    <script>
+        const socket = io();
+
+        socket.on('update_window', function (data) {
+            console.log(data.message);
+            fetch('/list_charts')
+                .then(response => response.json())
+                .then(data => {
+                    const chartsDiv = document.getElementById('charts');
+                    chartsDiv.innerHTML = '';
+                    data.charts.forEach(chart => {
+                        const img = document.createElement('img');
+                        img.src = '/chart/' + chart;
+                        img.style.width = '100%';
+                        chartsDiv.appendChild(img);
+                    });
+                });
+        });
+
+        document.getElementById('uploadForm').onsubmit = function (e) {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('file', document.getElementById('file').files[0]);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            }).then(response => response.json())
+            .then(data => {
+                console.log(data.message);
+            }).catch(error => {
+                console.error('Error:', error);
+            });
+        };
+    </script>
+</body>
+</html>

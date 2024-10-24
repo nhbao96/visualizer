@@ -1,0 +1,18 @@
+.container {
+    width: 80%;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.upload-section {
+    margin-bottom: 30px;
+}
+
+.chart-item {
+    margin-bottom: 30px;
+}
+
+.chart-item img {
+    max-width: 100%;
+    height: auto;
+}

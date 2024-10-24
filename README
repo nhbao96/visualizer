@@ -1,0 +1,5 @@
+install python
+
+python -m venv my_env
+.\my_env\Scripts\Activate
+pip install -r requirements.txt

@@ -5,6 +5,7 @@ import tempfile
 from flask import Flask, jsonify, request, render_template, send_from_directory
 from werkzeug.utils import secure_filename
 from flask_socketio import SocketIO
+import shutil
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
@@ -131,6 +132,10 @@ def upload_file():
     file = request.files['file']
     if file.filename == '':
         return jsonify({'error': 'Tên file không hợp lệ'}), 400
+
+    # Xóa hết các file trong thư mục results
+    shutil.rmtree(app.config['RESULT_FOLDER'])
+    os.makedirs(app.config['RESULT_FOLDER'], exist_ok=True)
 
     filename = secure_filename(file.filename)
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
